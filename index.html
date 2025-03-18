@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terço Católico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display&display=swap" rel="stylesheet">
+    <link rel="icon" href="cross.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="theme-toggle">
+        <div class="theme-btn" data-theme="dark" title="Tema Escuro">
+            <img src="imagens/moon.svg" alt="Tema Escuro">
+        </div>
+        <div class="theme-btn" data-theme="light" title="Tema Claro">
+            <img src="imagens/sun.svg" alt="Tema Claro">
+        </div>
+        <div class="theme-btn" data-theme="retro" title="Tema Retrô">
+            <img src="imagens/vintage.svg" alt="Tema Retrô">
+        </div>
+    </div>
+    <h1>Terço Católico</h1>
+    <div class="mystery-selector">
+        <select id="themeChoice">
+            <option value="dark">Tema Escuro</option>
+            <option value="light">Tema Claro</option>
+            <option value="retro">Tema Retrô</option>
+        </select>
+        <select id="mysteryChoice">
+            <option value="gloriosos">Mistérios Gloriosos</option>
+            <option value="gozosos">Mistérios Gozosos</option>
+            <option value="luminosos">Mistérios Luminosos</option>
+            <option value="dolorosos">Mistérios Dolorosos</option>
+        </select>
+        <select id="languageChoice">
+            <option value="portugues">Português</option>
+            <option value="latim">Latim</option>
+        </select>
+    </div>
+    <div class="container">
+        <div class="rosary-container" id="rosary">
+            <div class="rosary-item">
+                <div class="cross" data-prayer="Sinal da Cruz">
+                    <img src="imagens/images__1_-removebg-preview.png" alt="Cruz">
+                    <span class="tooltip">Faça o 'Sinal da Cruz' e reze o 'Creio'</span>
+                </div>
+                <input type="checkbox" class="checkbox" data-tooltip="Reze o 'Sinal da Cruz' e o 'Creio'">
+            </div>
+            <div class="rosary-item">
+                <div class="bead" data-prayer="Pai Nosso">
+                    <img src="imagens/bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png" alt="Bola Azul">
+                    <span class="tooltip">Reze o 'Pai Nosso'</span>
+                </div>
+                <input type="checkbox" class="checkbox" data-tooltip="Reze o 'Pai Nosso'">
+            </div>
+            <div class="rosary-item">
+                <div class="bead" data-prayer="Ave Maria">
+                    <img src="imagens/images__1_-removebg-preview.png" alt="Bola Branca">
+                    <span class="tooltip">Reze a 'Ave Maria' (1ª de 3)</span>
+                </div>
+                <input type="checkbox" class="checkbox" data-tooltip="Reze a 'Ave Maria'">
+            </div>
+            <div class="rosary-item">
+                <div class="bead" data-prayer="Ave Maria">
+                    <img src="imagens/images__1_-removebg-preview.png" alt="Bola Branca">
+                    <span class="tooltip">Reze a 'Ave Maria' (2ª de 3)</span>
+                </div>
+                <input type="checkbox" class="checkbox" data-tooltip="Reze a 'Ave Maria'">
+            </div>
+            <div class="rosary-item">
+                <div class="bead" data-prayer="Ave Maria">
+                    <img src="imagens/images__1_-removebg-preview.png" alt="Bola Branca">
+                    <span class="tooltip">Reze a 'Ave Maria' (3ª de 3)</span>
+                </div>
+                <input type="checkbox" class="checkbox" data-tooltip="Reze a 'Ave Maria'">
+            </div>
+            <div class="rosary-item">
+                <div class="bead" data-prayer="Glória">
+                    <img src="imagens/bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png" alt="Bola Azul">
+                    <span class="tooltip">Reze o 'Glória ao Pai'</span>
+                </div>
+                <input type="checkbox" class="checkbox" data-tooltip="Reze o 'Glória ao Pai'">
+            </div>
+        </div>
+        <div class="mystery-description" id="mysteryText"></div>
+    </div>
+
+    <div id="prayerPopup" class="prayer-text"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
