@@ -1,62 +1,56 @@
+// Elementos do DOM
 const rosaryContainer = document.getElementById('rosary');
 const prayerPopup = document.getElementById('prayerPopup');
 const mysteryChoice = document.getElementById('mysteryChoice');
 const languageChoice = document.getElementById('languageChoice');
-const themeChoice = document.getElementById('themeChoice');
 const mysteryText = document.getElementById('mysteryText');
+const playAudioButton = document.getElementById('playAudio');
+const pauseAudioButton = document.getElementById('pauseAudio');
+const youtubePlayer = document.getElementById('youtubePlayer');
 
-// Theme handling
-function setTheme(theme) {
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-    
-    // Update active state on theme buttons
-    document.querySelectorAll('.theme-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.getAttribute('data-theme') === theme);
-    });
-    
-    // Keep dropdown in sync (for compatibility)
-    themeChoice.value = theme;
+// Dados das orações e mistérios
+let prayersPortugues = {};
+let prayersLatin = {};
+let mysteries = {};
+
+// Links dos vídeos do Frei Gilson no YouTube
+const audioLinks = {
+    gozosos: 'https://www.youtube.com/embed/EKTz4C44aEc?enablejsapi=1',
+    dolorosos: 'https://www.youtube.com/embed/0_jGY4bB0lw?enablejsapi=1&start=185',
+    gloriosos: 'https://www.youtube.com/embed/j84Cg9GYO3o?enablejsapi=1',
+    luminosos: 'https://www.youtube.com/embed/lO0uMSJa8g0?enablejsapi=1'
+};
+
+// Carregar a API do YouTube
+let player;
+function loadYouTubeAPI() {
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 }
 
-// Load saved theme or default to dark
-const savedTheme = localStorage.getItem('theme') || 'dark';
-setTheme(savedTheme);
-themeChoice.value = savedTheme;
+// Função chamada pela API do YouTube quando estiver pronta
+window.onYouTubeIframeAPIReady = function() {
+    updateAudioPlayer();
+};
 
-// Theme change event listeners
-themeChoice.addEventListener('change', (e) => {
-    setTheme(e.target.value);
-});
-
-// Theme toggle buttons event listeners
-document.querySelectorAll('.theme-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const theme = btn.getAttribute('data-theme');
-        setTheme(theme);
-    });
-    
-    // Set initial active state
-    if (btn.getAttribute('data-theme') === savedTheme) {
-        btn.classList.add('active');
-    }
-});
-let prayersPortugues = {}; // Orações em português
-let prayersLatin = {}; // Orações em latim
-let mysteries = {}; // Mistérios detalhados em português
-
-// Carregar as orações e mistérios dos arquivos JSON
+// Carregar dados das orações e mistérios
 async function loadData() {
     try {
-        const [portuguesResponse, latinResponse, mysteriesResponse] = await Promise.all([
+        const [translationsResponse, portuguesResponse, latinResponse, mysteriesResponse] = await Promise.all([
+            fetch('translations.json'),
             fetch('prayers.json'),
             fetch('prayers_latin.json'),
             fetch('mysteries.json')
         ]);
-        prayersPortugues = await portuguesResponse.json().then(data => data.portugues.prayers);
-        prayersLatin = await latinResponse.json().then(data => data.latim.prayers);
+
+        const translationsData = await translationsResponse.json();
+        prayersPortugues = { ...translationsData.translations.portugues.prayers, ...(await portuguesResponse.json()).portugues.prayers };
+        prayersLatin = { ...translationsData.translations.latim.prayers, ...(await latinResponse.json()).latim.prayers };
         mysteries = await mysteriesResponse.json();
-        updateRosary(); // Inicializar o terço após carregar os dados
+
+        updateRosary();
     } catch (error) {
         console.error('Erro ao carregar os dados:', error);
         prayerPopup.textContent = 'Erro ao carregar os dados. Verifique os arquivos JSON.';
@@ -64,103 +58,136 @@ async function loadData() {
     }
 }
 
-// Função para criar um mistério (dezena)
-function createMystery(mysteryIndex, selectedMysteries, language) {
+// Criar um item do terço
+function createRosaryItem(prayerType, imgSrc, tooltipText, mysteryTitle = '') {
+    const item = document.createElement('div');
+    item.classList.add('rosary-item');
+    const tooltip = mysteryTitle ? `${tooltipText} - ${mysteryTitle}` : tooltipText;
+    const className = prayerType === 'Sinal da Cruz' ? 'cross' : prayerType === 'Salve Rainha' ? 'pendant' : 'bead';
+    item.innerHTML = `
+        <div class="${className}" data-prayer="${prayerType}">
+            <img src="imagens/${imgSrc}" alt="${prayerType}">
+            <span class="tooltip">${tooltip}</span>
+        </div>
+        <input type="checkbox" class="checkbox" data-tooltip="${tooltip}">
+    `;
+    return item;
+}
+
+// Criar uma dezena do terço
+function createDecade(mysteryIndex, selectedMysteries, language) {
     const decade = document.createElement('div');
     decade.classList.add('decade');
+    const mysteryTitle = selectedMysteries[mysteryIndex].split('\n')[0];
 
-    const blueBead = document.createElement('div');
-    blueBead.classList.add('rosary-item');
-    blueBead.innerHTML = `
-        <div class="bead" data-prayer="Pai Nosso">
-            <img src="imagens/bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png" alt="Bola Azul">
-            <span class="tooltip">${language === 'portugues' ? "Reze o 'Pai Nosso'" : "Ora 'Pater Noster'"} - ${selectedMysteries[mysteryIndex].split('\n')[0]}</span>
-        </div>
-        <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze o 'Pai Nosso'" : "Ora 'Pater Noster'"} - ${selectedMysteries[mysteryIndex].split('\n')[0]}">
-    `;
-    decade.appendChild(blueBead);
+    // Pai Nosso
+    decade.appendChild(createRosaryItem(
+        'Pai Nosso',
+        'bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png',
+        language === 'portugues' ? "Reze o 'Pai Nosso'" : "Ora 'Pater Noster'",
+        mysteryTitle
+    ));
 
+    // 10 Ave Marias
     for (let i = 1; i <= 10; i++) {
-        const whiteBead = document.createElement('div');
-        whiteBead.classList.add('rosary-item');
-        whiteBead.innerHTML = `
-            <div class="bead" data-prayer="Ave Maria">
-                <img src="imagens/images__1_-removebg-preview.png" alt="Bola Branca">
-                <span class="tooltip">${language === 'portugues' ? "Reze a 'Ave Maria'" : "Ora 'Ave Maria'"} (${i} de 10) - ${selectedMysteries[mysteryIndex].split('\n')[0]}</span>
-            </div>
-            <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze a 'Ave Maria'" : "Ora 'Ave Maria'"} (${i} de 10) - ${selectedMysteries[mysteryIndex].split('\n')[0]}">
-        `;
-        decade.appendChild(whiteBead);
+        decade.appendChild(createRosaryItem(
+            'Ave Maria',
+            'images__1_-removebg-preview.png',
+            language === 'portugues' ? `Reze a 'Ave Maria' (${i} de 10)` : `Ora 'Ave Maria' (${i} ex 10)`,
+            mysteryTitle
+        ));
     }
 
-    const gloriaBead = document.createElement('div');
-    gloriaBead.classList.add('rosary-item');
-    gloriaBead.innerHTML = `
-        <div class="bead" data-prayer="Glória">
-            <img src="imagens/bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png" alt="Bola Azul">
-            <span class="tooltip">${language === 'portugues' ? "Reze o 'Glória ao Pai'" : "Ora 'Gloria Patri'"} - ${selectedMysteries[mysteryIndex].split('\n')[0]}</span>
-        </div>
-        <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze o 'Glória ao Pai'" : "Ora 'Gloria Patri'"} - ${selectedMysteries[mysteryIndex].split('\n')[0]}">
-    `;
-    decade.appendChild(gloriaBead);
+    // Glória
+    decade.appendChild(createRosaryItem(
+        'Glória',
+        'bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png',
+        language === 'portugues' ? "Reze o 'Glória ao Pai'" : "Ora 'Gloria Patri'",
+        mysteryTitle
+    ));
+
+    // Ó Meu Jesus
+    decade.appendChild(createRosaryItem(
+        'Ó Meu Jesus',
+        'bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png',
+        language === 'portugues' ? "Reze o 'Ó Meu Jesus'" : "Ora 'O Jesu mi'",
+        mysteryTitle
+    ));
 
     return decade;
 }
 
-// Atualizar o terço com base nas seleções
+// Atualizar o player de áudio com base no mistério selecionado
+function updateAudioPlayer() {
+    const selectedMystery = mysteryChoice.value;
+    const videoUrl = audioLinks[selectedMystery];
+
+    if (player) {
+        player.destroy(); // Destroi o player anterior para evitar múltiplos players
+    }
+
+    player = new YT.Player('youtubePlayer', {
+        height: '0', // Oculta o vídeo
+        width: '0',
+        videoId: videoUrl.split('/embed/')[1].split('?')[0],
+        playerVars: {
+            autoplay: 0, // Não inicia automaticamente
+            controls: 0, // Remove controles padrão do YouTube
+            modestbranding: 1,
+            start: videoUrl.includes('start=') ? parseInt(videoUrl.split('start=')[1]) : 0
+        },
+        events: {
+            'onReady': onPlayerReady
+        }
+    });
+}
+
+// Quando o player estiver pronto
+function onPlayerReady(event) {
+    playAudioButton.addEventListener('click', () => {
+        event.target.playVideo();
+    });
+    pauseAudioButton.addEventListener('click', () => {
+        event.target.pauseVideo();
+    });
+}
+
+// Atualizar o terço
 function updateRosary() {
     const selectedMystery = mysteryChoice.value;
     const selectedMysteries = mysteries[selectedMystery];
     const language = languageChoice.value;
-    const prayers = language === 'portugues' ? prayersPortugues : prayersLatin;
+    const currentPrayers = language === 'portugues' ? prayersPortugues : prayersLatin;
 
-    rosaryContainer.innerHTML = `
-        <div class="rosary-item">
-            <div class="cross" data-prayer="Sinal da Cruz">
-                <img src="imagens/Free-Cross-With-Jesus-Background-Black-and-White-SVG-Vector-File-for-Laser-Cutting-3-Photoroom.png" alt="Cruz">
-                <span class="tooltip">${language === 'portugues' ? "Faça o 'Sinal da Cruz' e reze o 'Creio'" : "Fac 'Signum Crucis' et ora 'Credo'"}</span>
-            </div>
-            <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze o 'Sinal da Cruz' e o 'Creio'" : "Ora 'Signum Crucis' et 'Credo'"}">
-        </div>
-        <div class="rosary-item">
-            <div class="bead" data-prayer="Pai Nosso">
-                <img src="imagens/bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png" alt="Bola Azul">
-                <span class="tooltip">${language === 'portugues' ? "Reze o 'Pai Nosso'" : "Ora 'Pater Noster'"}</span>
-            </div>
-            <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze o 'Pai Nosso'" : "Ora 'Pater Noster'"}">
-        </div>
-        <div class="rosary-item">
-            <div class="bead" data-prayer="Ave Maria">
-                <img src="imagens/images__1_-removebg-preview.png" alt="Bola Branca">
-                <span class="tooltip">${language === 'portugues' ? "Reze a 'Ave Maria' (1ª de 3)" : "Ora 'Ave Maria' (1ª ex 3)"}</span>
-            </div>
-            <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze a 'Ave Maria'" : "Ora 'Ave Maria'"}">
-        </div>
-        <div class="rosary-item">
-            <div class="bead" data-prayer="Ave Maria">
-                <img src="imagens/images__1_-removebg-preview.png" alt="Bola Branca">
-                <span class="tooltip">${language === 'portugues' ? "Reze a 'Ave Maria' (2ª de 3)" : "Ora 'Ave Maria' (2ª ex 3)"}</span>
-            </div>
-            <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze a 'Ave Maria'" : "Ora 'Ave Maria'"}">
-        </div>
-        <div class="rosary-item">
-            <div class="bead" data-prayer="Ave Maria">
-                <img src="imagens/images__1_-removebg-preview.png" alt="Bola Branca">
-                <span class="tooltip">${language === 'portugues' ? "Reze a 'Ave Maria' (3ª de 3)" : "Ora 'Ave Maria' (3ª ex 3)"}</span>
-            </div>
-            <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze a 'Ave Maria'" : "Ora 'Ave Maria'"}">
-        </div>
-        <div class="rosary-item">
-            <div class="bead" data-prayer="Glória">
-                <img src="imagens/bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png" alt="Bola Azul">
-                <span class="tooltip">${language === 'portugues' ? "Reze o 'Glória ao Pai'" : "Ora 'Gloria Patri'"}</span>
-            </div>
-            <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze o 'Glória ao Pai'" : "Ora 'Gloria Patri'"}">
-        </div>
-    `;
+    rosaryContainer.innerHTML = '';
 
+    // Introdução do terço
+    rosaryContainer.appendChild(createRosaryItem(
+        'Sinal da Cruz',
+        'Free-Cross-With-Jesus-Background-Black-and-White-SVG-Vector-File-for-Laser-Cutting-3-Photoroom.png',
+        language === 'portugues' ? "Faça o 'Sinal da Cruz' e reze o 'Creio'" : "Fac 'Signum Crucis' et ora 'Credo'"
+    ));
+    rosaryContainer.appendChild(createRosaryItem(
+        'Pai Nosso',
+        'bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png',
+        language === 'portugues' ? "Reze o 'Pai Nosso'" : "Ora 'Pater Noster'"
+    ));
+    for (let i = 1; i <= 3; i++) {
+        rosaryContainer.appendChild(createRosaryItem(
+            'Ave Maria',
+            'images__1_-removebg-preview.png',
+            language === 'portugues' ? `Reze a 'Ave Maria' (${i}ª de 3)` : `Ora 'Ave Maria' (${i}ª ex 3)`
+        ));
+    }
+    rosaryContainer.appendChild(createRosaryItem(
+        'Glória',
+        'bola-azul-simples-feita-de-borracha-plastica-ou-borracha_689083-87-Photoroom.png',
+        language === 'portugues' ? "Reze o 'Glória ao Pai'" : "Ora 'Gloria Patri'"
+    ));
+
+    // Cinco dezenas
     for (let i = 0; i < 5; i++) {
-        rosaryContainer.appendChild(createMystery(i, selectedMysteries, language));
+        rosaryContainer.appendChild(createDecade(i, selectedMysteries, language));
         if (i < 4) {
             const separator = document.createElement('div');
             separator.classList.add('decade-separator');
@@ -168,16 +195,12 @@ function updateRosary() {
         }
     }
 
-    const pendant = document.createElement('div');
-    pendant.classList.add('rosary-item');
-    pendant.innerHTML = `
-        <div class="pendant" data-prayer="Salve Rainha">
-            <img src="imagens/popsocket_nossa_senhora_1-Photoroom.png" alt="Pingente">
-            <span class="tooltip">${language === 'portugues' ? "Reze a 'Salve Rainha'" : "Ora 'Salve Regina'"}</span>
-        </div>
-        <input type="checkbox" class="checkbox" data-tooltip="${language === 'portugues' ? "Reze a 'Salve Rainha'" : "Ora 'Salve Regina'"}">
-    `;
-    rosaryContainer.appendChild(pendant);
+    // Conclusão com Salve Rainha
+    rosaryContainer.appendChild(createRosaryItem(
+        'Salve Rainha',
+        'popsocket_nossa_senhora_1-Photoroom.png',
+        language === 'portugues' ? "Reze a 'Salve Rainha'" : "Ora 'Salve Regina'"
+    ));
 
     // Atualizar texto dos mistérios com links para a Bíblia
     let formattedText = `<h2>Mistérios ${selectedMystery.charAt(0).toUpperCase() + selectedMystery.slice(1)}</h2>`;
@@ -198,14 +221,12 @@ function updateRosary() {
     });
     mysteryText.innerHTML = formattedText;
 
-    addEvents();
+    addPrayerEvents(currentPrayers);
+    updateAudioPlayer(); // Atualiza o áudio quando o mistério muda
 }
 
-// Adicionar eventos aos elementos do terço
-function addEvents() {
-    const language = languageChoice.value;
-    const prayers = language === 'portugues' ? prayersPortugues : prayersLatin;
-
+// Adicionar eventos de clique e checkbox
+function addPrayerEvents(currentPrayers) {
     document.querySelectorAll('.rosary-item').forEach(item => {
         const checkbox = item.querySelector('.checkbox');
         const element = item.querySelector('.bead, .cross, .pendant');
@@ -216,28 +237,26 @@ function addEvents() {
         });
 
         element.addEventListener('click', () => {
-            let fullPrayer = '';
-            if (prayerType === "Sinal da Cruz") {
-                fullPrayer = `${prayers["Sinal da Cruz"]}\n\n${prayers["Creio"]}`;
-            } else {
-                fullPrayer = prayers[prayerType];
-            }
+            const fullPrayer = prayerType === 'Sinal da Cruz' 
+                ? `${currentPrayers['Sinal da Cruz']}\n\n${currentPrayers['Creio']}` 
+                : currentPrayers[prayerType];
             prayerPopup.textContent = fullPrayer;
             prayerPopup.classList.toggle('active');
         });
     });
 }
 
-// Carregar dados e inicializar
-loadData();
-
-// Atualizar o terço ao mudar mistério ou idioma
-mysteryChoice.addEventListener('change', updateRosary);
-languageChoice.addEventListener('change', updateRosary);
-
-// Fechar o pop-up ao clicar fora
+// Fechar popup ao clicar fora
 document.addEventListener('click', (e) => {
     if (!prayerPopup.contains(e.target) && !e.target.closest('.bead, .cross, .pendant')) {
         prayerPopup.classList.remove('active');
     }
 });
+
+// Event listeners para atualização do terço
+mysteryChoice.addEventListener('change', updateRosary);
+languageChoice.addEventListener('change', updateRosary);
+
+// Inicializar
+loadYouTubeAPI();
+loadData();
