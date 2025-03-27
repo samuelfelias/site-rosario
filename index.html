@@ -9,23 +9,27 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Terço Católico</h1>
-    </header>
-    <main>
-        <div class="mystery-selector">
-            <label for="mysteryChoice">Escolha o Mistério:</label>
-            <select id="mysteryChoice">
-                <option value="gloriosos">Mistérios Gloriosos</option>
-                <option value="gozosos">Mistérios Gozosos</option>
-                <option value="luminosos">Mistérios Luminosos</option>
-                <option value="dolorosos">Mistérios Dolorosos</option>
-            </select>
-            <label for="languageChoice">Idioma:</label>
-            <select id="languageChoice">
-                <option value="portugues">Português</option>
-                <option value="latim">Latim</option>
-            </select>
+    <h1>Terço Católico</h1>
+    <div class="mystery-selector">
+        <select id="mysteryChoice">
+            <option value="gloriosos">Mistérios Gloriosos</option>
+            <option value="gozosos">Mistérios Gozosos</option>
+            <option value="luminosos">Mistérios Luminosos</option>
+            <option value="dolorosos">Mistérios Dolorosos</option>
+        </select>
+        <select id="languageChoice">
+            <option value="portugues">Português</option>
+            <option value="latim">Latim</option>
+        </select>
+    </div>
+    <div class="audio-controls">
+        <button id="playAudio">Tocar Áudio</button>
+        <button id="pauseAudio">Pausar Áudio</button>
+        <div id="youtubePlayer" style="display: none;"></div>
+    </div>
+    <div class="container">
+        <div class="rosary-container" id="rosary">
+            <!-- Conteúdo inicial mantido -->
         </div>
         <div class="audio-controls">
             <button id="playPauseAudio">Tocar</button>
