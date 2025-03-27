@@ -9,30 +9,46 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>Terço Católico</h1>
-    <div class="mystery-selector">
-        <select id="mysteryChoice">
-            <option value="gloriosos">Mistérios Gloriosos</option>
-            <option value="gozosos">Mistérios Gozosos</option>
-            <option value="luminosos">Mistérios Luminosos</option>
-            <option value="dolorosos">Mistérios Dolorosos</option>
-        </select>
-        <select id="languageChoice">
-            <option value="portugues">Português</option>
-            <option value="latim">Latim</option>
-        </select>
-    </div>
-    <div class="audio-controls">
-        <button id="playAudio">Tocar Áudio</button>
-        <button id="pauseAudio">Pausar Áudio</button>
-        <div id="youtubePlayer" style="display: none;"></div>
-    </div>
-    <div class="container">
-        <div class="rosary-container" id="rosary">
-            <!-- Conteúdo inicial mantido -->
+    <header>
+        <h1>Terço Católico</h1>
+    </header>
+    <main>
+        <div class="mystery-selector">
+            <label for="mysteryChoice">Escolha o Mistério:</label>
+            <select id="mysteryChoice">
+                <option value="gloriosos">Mistérios Gloriosos</option>
+                <option value="gozosos">Mistérios Gozosos</option>
+                <option value="luminosos">Mistérios Luminosos</option>
+                <option value="dolorosos">Mistérios Dolorosos</option>
+            </select>
+            <label for="languageChoice">Idioma:</label>
+            <select id="languageChoice">
+                <option value="portugues">Português</option>
+                <option value="latim">Latim</option>
+            </select>
         </div>
-        <div class="mystery-description" id="mysteryText"></div>
-    </div>
+        <div class="audio-controls">
+            <button id="playPauseAudio">Tocar</button>
+            <button id="restartAudio">Recomeçar</button>
+            <label for="speedChoice">Velocidade:</label>
+            <select id="speedChoice">
+                <option value="1">Normal (1x)</option>
+                <option value="1.5">Rápido (1.5x)</option>
+                <option value="2">Muito Rápido (2x)</option>
+            </select>
+            <div class="progress-container">
+                <input type="range" id="audioProgress" min="0" max="100" value="0">
+                <div class="time-display">
+                    <span id="currentTime">0:00</span> / <span id="duration">0:00</span>
+                </div>
+            </div>
+            <audio id="audioPlayer" style="display: none;"></audio>
+        </div>
+        <div class="container">
+            <div class="rosary-container" id="rosary"></div>
+            <div class="mystery-description" id="mysteryText"></div>
+        </div>
+    </main>
     <div id="prayerPopup" class="prayer-text"></div>
     <script src="script.js"></script>
 </body>
