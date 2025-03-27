@@ -270,4 +270,4 @@ async function initialize() {
     updateAudioPlayer();
 }
 
-initialize();
+initialize(); //Teste
